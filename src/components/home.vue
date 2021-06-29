@@ -163,6 +163,7 @@ export default {
             }
             this.delete_tabs(target)
             if (this.activeIndex === target) {
+                // console.log(this.$store.state.tabs.openTab)
                 // 设置当前激活的路由
                 if (this.openTab && this.openTab.length >= 1) {
                 // console.log('=============', this.openTab[this.openTab.length - 1].route)
@@ -172,7 +173,15 @@ export default {
             }
         },
         clickTab(tab){
-            this.$router.push({path: this.activeIndex})
+            try{
+                if(this.$router.push({path: this.activeIndex})){
+
+                }else{
+                    throw 'activeIndex一致'
+                }
+            }catch(e){
+                console.log(e)
+            }
         }
     },
     computed: {

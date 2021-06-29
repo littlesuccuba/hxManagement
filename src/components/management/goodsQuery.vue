@@ -3,8 +3,8 @@
         <!-- 搜索框 -->
         <el-row :gutter="20">
             <el-col :span="8">
-                <el-input placeholder="请输入搜索的商品名称">
-                    <el-button slot="append" icon="el-icon-search"></el-button>
+                <el-input placeholder="请输入搜索的商品名称" v-model="searchInfo">
+                    <el-button slot="append" icon="el-icon-search" @click="searchGoods"></el-button>
                 </el-input>
             </el-col>
         </el-row>
@@ -118,6 +118,7 @@ export default {
     name: 'goodsquery',
     data: ()=>{
         return {
+            searchInfo:'',
             loading:true,
             pageSize: 8,
             currentPage:1,
@@ -186,6 +187,21 @@ export default {
         this.getData()
     },
     methods:{
+        searchGoods(){
+            // 根据商品名称来模糊查询
+            let url = axiosConf.BASE_URL + `goods/good/?goods_name=${this.searchInfo}`
+            this.$axios.get(url).then(res =>{
+                // console.log(res.data)
+                this.$message({
+                    type:'success',
+                    message:`搜索到${res.data.length}条数据`
+                })
+                this.tableData = res.data
+            }).catch(err =>{
+                // console.log(err)
+                this.message.error('搜索失败！')
+            })
+        },
         changeState(row,item){
             let url = axiosConf.BASE_URL + `goods/good/${row.g_id}/`
             var data = {}
@@ -209,7 +225,7 @@ export default {
         getData(){
             let url = axiosConf.BASE_URL + 'goods/good/'
             this.$axios.get(url).then(res =>{
-                this.tableData = res.data.results
+                this.tableData = res.data
                 this.loading = !this.loading
             }).catch(err =>{
                 console.log(err)
@@ -249,7 +265,7 @@ export default {
                     if(this.isEdit){
                         let url = axiosConf.BASE_URL + `goods/good/${this.form.g_id}/`
                         this.$axios.patch(url,this.form).then(res =>{
-                            console.log(res.data)
+                            // console.log(res.data)
                             this.dialogFormVisible = false
                             this.$message({
                                 type: 'success',

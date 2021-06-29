@@ -3,32 +3,38 @@
         <!-- 搜索框 -->
         <el-row :gutter="20">
             <el-col :span="8">
-                <el-input placeholder="请输入搜索的订单号">
-                    <el-button slot="append" icon="el-icon-search"></el-button>
+                <el-input placeholder="请输入搜索内容" v-model="searchInfo">
+                    <el-select v-model="searchField" slot="prepend" placeholder="用户名" style="width:100px;">
+                        <el-option label="订单号" value="order_id"></el-option>
+                        <el-option label="商品类别" value="goods_type"></el-option>
+                        <el-option label="用户名" value="username"></el-option>
+                        <el-option label="手机号" value="phone"></el-option>
+                        <el-option label="状态" value="state"></el-option>
+                    </el-select>
+                    <el-button slot="append" icon="el-icon-search" @click="searchOrder"></el-button>
                 </el-input>
             </el-col>
         </el-row>
         <el-row style="margin-top: 20px;">
             <el-col>
-                <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)" stripe>
+                <el-table v-loading="loading" :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)" stripe>
                     <el-table-column prop="id" label="订单id" align="center" width="100"></el-table-column>
-                    <el-table-column prop="orderNum" label="订单号" align="center" width="260"></el-table-column>
-                    <el-table-column prop="type" label="商品类别" align="center" width="120"></el-table-column>
-                    <el-table-column prop="price" label="单价" align="center" width="100">
+                    <el-table-column prop="order_id" label="订单号" align="center" width="260"></el-table-column>
+                    <el-table-column prop="goods_type" label="商品类别" align="center" width="120"></el-table-column>
+                    <el-table-column prop="goods_price" label="单价" align="center" width="100">
                         <template slot-scope="scope">
                             <i class="iconfont icon-rmb"></i>
-                            <span>{{scope.row.price}}</span>
+                            <span>{{scope.row.goods_price}}</span>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="number" label="购买数量" align="center" width="80"></el-table-column>
-                    <el-table-column prop="username" label="购买用户" align="center" width="160"></el-table-column>
+                    <el-table-column prop="quantity" label="购买数量" align="center" width="80"></el-table-column>
+                    <el-table-column prop="user" label="购买用户" align="center" width="160"></el-table-column>
                     <el-table-column prop="phone" label="联系电话" align="center" width="160"></el-table-column>
-                    <el-table-column prop="address" label="地址" align="center">
-                        
+                    <el-table-column prop="address" label="地址" align="center">    
                     </el-table-column>
-                    <el-table-column prop="status" label="状态" align="center" width="160">
+                    <el-table-column prop="state" label="状态" align="center" width="160">
                         <template slot-scope="scope">
-                            <el-select v-model="scope.row.status" placeholder="请选择" @change="updateStatus(scope.row)">
+                            <el-select v-model="scope.row.state" placeholder="请选择" @change="updateStatus(scope.row)">
                                 <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.label"></el-option>
                             </el-select>
                         </template>
@@ -53,21 +59,25 @@
 </template>
 
 <script>
+import axiosConf from '@/components/utils/axiosConf'
 export default {
     name: 'orderInfo',
     data: ()=>{
         return {
+            searchInfo:'',
+            searchField:'order_id',
+            loading:true,
             pageSize: 8,
             currentPage:1,
             tableData:[
                 {
                     id:'1',
-                    orderNum:'xyjxx0066611',
-                    type:'电器',
-                    price:'999',
-                    number:'1',
-                    status:'已发货',
-                    username:'小魔女',
+                    order_id:'xyjxx0066611',
+                    goods_type:'电器',
+                    goods_price:'999',
+                    quantity:'1',
+                    state:'已发货',
+                    user:'小魔女',
                     phone:'13977726785',
                     address:'广西钦州市钦南区··············'
                 }
@@ -92,7 +102,34 @@ export default {
             ]
         }
     },
+    mounted(){
+        this.getData()
+    },
     methods:{
+        getData(){
+            let url = `${axiosConf.BASE_URL}orders/order/`
+            this.$axios.get(url).then(res =>{
+                // console.log(res.data)
+                this.loading = !this.loading
+                this.tableData = res.data
+            }).catch(err =>{
+                console.log(err)
+            })
+        },
+        searchOrder(){
+            let url = axiosConf.BASE_URL + `orders/order/?${this.searchField}=${this.searchInfo}`
+            this.$axios.get(url).then(res =>{
+                // console.log(typeof res.data)
+                this.$message({
+                    type:'success',
+                    message:`搜索到${res.data.length}条数据`
+                })
+                this.tableData = res.data
+            }).catch(err =>{
+                // console.log(err)
+                this.message.error('搜索失败！')
+            })
+        },
         cancelDelete(){
             this.$message({
                 type: 'info',
@@ -101,14 +138,27 @@ export default {
         },
         // 删除一行数据
         removeRow(index,row){
-            this.tableData.splice(index,1)
-            this.$message({
-                type: 'success',
-                message: '删除成功'
+            let url = axiosConf.BASE_URL + `orders/order/${row.id}/`
+            this.$axios.delete(url).then(res =>{
+                this.tableData.splice(index,1)
+                this.$message({
+                    type: 'success',
+                    message: '删除成功！'
+                })
+            }).catch(err =>{
+                this.$message.error('删除失败!')
             })
         },
         updateStatus(row){
-            console.log(row.status)
+            let url = `${axiosConf.BASE_URL}orders/order/${row.id}/`
+            this.$axios.patch(url,{state:row.state}).then(res =>{
+                this.$message({
+                    type: 'success',
+                    message: '修改成功！'
+                })
+            }).catch(err =>{
+                this.$message.error('修改失败!')
+            })
         }
         // // 编辑一行数据
         // editInfo(index,row){

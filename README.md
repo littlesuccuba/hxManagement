@@ -4,16 +4,16 @@
 
 > A Vue.js project
 
-## Build Setup
+## 安装与使用
 
 ``` bash
-# install dependencies
+# 初始化项目（安装环境依赖）
 npm install
 
-# serve with hot reload at localhost:8080
+# 运行开发者服务器 at localhost:8080
 npm run dev
 
-# build for production with minification
+# 打包适用于生产环境的文件
 npm run build
 
 # build for production and view the bundle analyzer report

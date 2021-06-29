@@ -3,8 +3,12 @@
         <!-- 搜索框 -->
         <el-row :gutter="20">
             <el-col :span="6">
-                <el-input placeholder="请输入搜索内容">
-                    <el-button slot="append" icon="el-icon-search"></el-button>
+                <el-input placeholder="请输入搜索内容" v-model="searchInfo">
+                    <el-select v-model="searchField" slot="prepend" placeholder="用户名" style="width:100px;">
+                        <el-option label="用户名" value="username"></el-option>
+                        <el-option label="手机号" value="phone"></el-option>
+                    </el-select>
+                    <el-button slot="append" icon="el-icon-search" @click="searchUser"></el-button>
                 </el-input>
             </el-col>
             <el-col :span="18">
@@ -43,7 +47,7 @@
             </el-col>
         </el-row>
         <el-row :gutter="20" style="margin-top:20px;" type="flex" justify="center">
-            <el-pagination background :current-page="currentPage" :page-size="pageSize" layout="total, prev, pager, next, jumper" :total="tableData.length"></el-pagination>
+            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" background :current-page="currentPage" :page-size="pageSize" layout="total, prev, pager, next, jumper" :total="tableData.length"></el-pagination>
         </el-row>
         <!-- dialog对话框 -->
         <el-dialog :title="dialogTitle" :visible.sync="dialogFormVisible" width="30%" center>
@@ -99,6 +103,8 @@ export default {
     name: 'userList',
     data: ()=>{
         return {
+            searchField:'username',
+            searchInfo:'',
             loading:true,
             isEdit: false,
             dialogTitle: '',
@@ -156,12 +162,43 @@ export default {
         this.getAllUsers()
     },
     methods: {
+        handleSizeChange(val){
+            console.log(`每页${val}条`)
+            this.pageSize = val
+        },
+        handleCurrentChange(val){
+            console.log(`当前页${val}条`)
+            this.currentPage = val
+        },
+        // 上一页
+        prevPage(page){
+            console.log(page)
+        },
+        // 下一页
+        nextPage(page){
+            console.log(page)
+        },
+        // 搜索用户
+        searchUser(){
+            let url = axiosConf.BASE_URL + `users/user/?${this.searchField}=${this.searchInfo}`
+            this.$axios.get(url).then(res =>{
+                // console.log(res.data)
+                this.$message({
+                    type:'success',
+                    message:`搜索到${res.data.length}条数据`
+                })
+                this.tableData = res.data
+            }).catch(err =>{
+                // console.log(err)
+                this.message.error('搜索失败！')
+            })
+        },
         // 获取用户数据
         getAllUsers(){
             let url = axiosConf.BASE_URL + 'users/user/'
             this.$axios.get(url).then(res =>{
                 // console.log(res.data)
-                this.tableData = res.data.results
+                this.tableData = res.data
                 this.loading = !this.loading
             }).catch(err =>{
                 console.log(err)
@@ -171,7 +208,6 @@ export default {
         removeRow(index,row){
             // console.log(index,row,row.id)
             let url = axiosConf.BASE_URL + `users/user/${row.id}/`
-            console.log(url)
             this.$axios.delete(url).then(res =>{
                 this.tableData.splice(index,1)
                 this.$message({
@@ -216,7 +252,7 @@ export default {
                         let url = axiosConf.BASE_URL + `users/user/${this.form.id}/`
                         this.$axios.patch(url,this.form).then(res =>{
                             this.$axios.get(axiosConf.BASE_URL+'users/user/').then(res =>{
-                                this.tableData = res.data.results
+                                this.tableData = res.data
                             }).catch(err =>{
                                 
                             })
@@ -232,7 +268,6 @@ export default {
                     }else{
                         // 添加用户
                         let url = axiosConf.BASE_URL + 'users/user/'
-                        console.log(this.form)
                         this.$axios.post(url,this.form).then(res =>{
                             // console.log(res.data)
                             this.tableData.push(res.data)
