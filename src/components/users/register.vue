@@ -35,7 +35,7 @@
                                 <el-form-item>
                                     <el-row>
                                         <el-col>
-                                            <el-button type="primary" style="width: 100%;" @click="submita('reform')">注册</el-button>
+                                            <el-button type="primary" style="width: 100%;" @click="submita('reform')" :icon="isLoading">注册</el-button>
                                         </el-col>
                                     </el-row>
                                     <el-row style="margin-top:10px;">
@@ -61,6 +61,7 @@ export default {
     name:'register',
     data: ()=>{
         return {
+            isLoading:'',
             isGetCode:false,
             getcode:'获取验证码',
             // 表单数据
@@ -96,39 +97,46 @@ export default {
             this.$refs[formName].validate((valid) => {
             if (valid) {
                 // 向服务器请求注册
-                let url = axiosConf.BASE_URL + 'users/register/'
+                const url = axiosConf.BASE_URL + 'users/register/'
                 var data = {
                     username: this.form.name,
                     password: this.form.password,
                     phone:this.form.phone,
                     code:this.form.code
                 }
-                this.$axios.post(url,data).then(res =>{
-                    let $this = this
-                    this.$message({
+                var $this = this
+                this.isLoading = 'el-icon-loading'
+                this.$axios.post(url,data,{timeout:60000}).then(res =>{
+                    // console.log(res)
+                    this.isLoading = ''
+                    $this.$message({
                         type:'success',
                         message :'注册成功！3秒后前往登陆',
                         duration: 3000,
                         onClose:()=>{
-                            console.log(this.$router,1)
+                            // console.log(this.$router,1)
                             $this.$router.push('/login')
                         }
                     });
                 }).catch(err =>{
                     // console.log(err.config,err.request,err.response,err.isAxiosError,err.toJSON)
                     // for(let i in err){
-                    //     console.log(err[i])
+                    //     console.log(err[i],Object.keys(err[i]))
                     // }
-                    let $this = this
+                    this.isLoading = ''
+                    const $this = this
                     var errFun = (msg)=>{
                         $this.$message.error(msg);
                     }
                     switch (err.response.status){
+                        case 400:
+                            errFun('用户名已存在')
+                            break
                         case 401:
                             errFun('用户未认证')
                             break
                         case 403:
-                            errFun('验证码错误')
+                            errFun('验证码错误或手机号已绑定')
                             break
                     }
                     
@@ -144,7 +152,7 @@ export default {
             if(this.form.phone!==''){
                 this.isGetCode = !this.isGetCode
                 var i = 60
-                const $this = this
+                var $this = this
                 var count = setInterval(function(){
                     $this.getcode = `${--i}秒可获取`
                     if(i===0){

@@ -8,7 +8,7 @@ import 'element-ui/lib/theme-chalk/index.css'
 import Axios from 'axios'
 
 const axios = Axios.create({
-  timeout:500,    // 请求超时时间
+  timeout:60000,    // 请求超时时间
   headers: {
     "content-type": "application/json",
     "Authorization": localStorage.getItem('token') || ''

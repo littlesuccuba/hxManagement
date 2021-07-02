@@ -1,8 +1,10 @@
 import axios from 'axios'
 import { Message } from 'element-ui'
+import axiosConf from '../axiosConf'
+
 export default {
     LoginAsync({state, commit}, {url, form}){
-        let baseUrl='http://127.0.0.1:8000/'
+        let baseUrl = axiosConf.BASE_URL
         axios.post(baseUrl+url, form).then(res=>{
             let Authorization = {
                 token:  `jwt ${res.data.token}`,
