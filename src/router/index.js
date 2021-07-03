@@ -13,7 +13,7 @@ import orderInfo from '@/components/management/orderInfo'
 Vue.use(Router)
 
 export default new Router({
-  mode:'bash',
+  mode:'history',
   routes: [
     {
       path: '/',
